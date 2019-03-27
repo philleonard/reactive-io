@@ -1,0 +1,24 @@
+# General Java development.
+.attach_pid*
+.classpath
+.DS_Store
+.factorypath
+.idea
+.project
+.settings
+target
+*.iml
+*.swp
+overlays
+
+# AngularJS development.
+node
+node_modules
+**/.npmrc
+!/src/etc/.npmrc
+**/webapp/coverage
+**/webapp/mock-server/**/*.js
+**/webapp/mock-server/**/*.js.map
+# Obsolete as of npm v4.2.0; to be removed some day.
+# See https://github.com/npm/npm/releases/tag/v4.2.0
+npm-debug.log*
