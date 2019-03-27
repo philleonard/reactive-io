@@ -44,60 +44,8 @@ public class Client {
     private static final Logger LOG = Logger.getLogger(Client.class.getName());
     private static final String INT = "int";
 
-    private final MongoCollection<Document> integers =
-            MongoClients.create()
-                    .getDatabase("local-dev")
-                    .getCollection("integers");
-
     public static void main(String[] args) {
         SpringApplication.run(Client.class, args);
-    }
-
-    @Bean
-    public RouterFunction<ServerResponse> route() {
-        return RouterFunctions.route(GET("/sum"), this::requestHandler);
-    }
-
-    private Mono<ServerResponse> requestHandler(ServerRequest request) {
-        Flowable<Integer> intStream =
-                Flowable.fromPublisher(
-                        integers.find(and(gte(INT, 10), lte(INT, 100)))
-                                .batchSize(1))
-                        .doOnRequest(o -> LOG.info("Request to Mongo: " + o))
-                        .map(doc -> doc.getInteger(INT));
-
-        Flowable<Payload> payload =
-                intStream.map(String::valueOf)
-                        .doOnNext(o -> LOG.info("Sending to Server: " + o))
-                        .map(DefaultPayload::create);
-
-        Flux<Integer> integerFlux = rsocketConnect()
-                .flatMapMany(localhost ->
-                        localhost.requestChannel(payload)
-                                .map(Payload::getDataUtf8)
-                                .map(Integer::valueOf));
-
-        return ServerResponse.ok().contentType(APPLICATION_STREAM_JSON).body(
-                integerFlux.map(Something::new), Something.class);
-    }
-
-    private Mono<RSocket> rsocketConnect() {
-        return RSocketFactory.connect()
-                .transport(TcpClientTransport.create(1234))
-                .start();
-    }
-
-    class Something {
-
-        private final int integer;
-
-        Something(int integer) {
-            this.integer = integer;
-        }
-
-        public int getInteger() {
-            return integer;
-        }
     }
 
 }
